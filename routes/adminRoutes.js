@@ -21,7 +21,7 @@ router.get("/verify/:id", async (req, res) => {
   try {
     const webDomain = url.parse(webUrl);
     console.log(webDomain);
-    http
+  http
       .get(webUrl, (resFromServer) => {
         if (resFromServer.statusCode === 200) {
           let data = "";

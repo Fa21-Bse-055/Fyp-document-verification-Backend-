@@ -1,17 +1,10 @@
-#Sample Dockerfile for NodeJS Apps
+# Use an official Node.js runtime as a parent image
+FROM node
 
-FROM node:20
-
-ENV NODE_ENV=production
-
-WORKDIR /app
-
-COPY ["package.json", "package-lock.json*", "./"]
-
-RUN npm install --production
-
+# Copy the rest of your application code
 COPY . .
 
-EXPOSE 3000
+# Install dependencies
+RUN npm install
 
-CMD [ "node", "app.js" ]
+CMD ["node","app.js"]
