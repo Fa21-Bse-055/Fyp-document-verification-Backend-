@@ -120,7 +120,10 @@ router.get("/download",cookieReader,  async (req, res) => {
 });
 
 function cookieReader(req,res,next){
+  
   const token = req.cookies.token
+  console.log("token",token);
+  
   if(token==="")
   res.status(500).json({msg:"TOKEN EXPIRED!"})
   const data = jwt.verify(token, process.env.JWT_SECRET_KEY)
