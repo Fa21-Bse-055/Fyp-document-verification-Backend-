@@ -1,5 +1,5 @@
 node_modules/
 verificationFiles/*
 !verificationFiles/.gitkeep
-
+images/uploads/uploadCNIC/*
 !images/uploads/uploadCNIC/.gitkeep 
