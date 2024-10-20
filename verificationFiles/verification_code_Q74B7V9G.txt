@@ -1,9 +1,0 @@
-
-Organization: Comsats
-Verification Code: Q74B7V9G
-Issued by: Document Verification System
-Date: Tue Oct 01 2024
-
-This file is used to verify the ownership of the domain for Comsats.
-Please upload this file to the root directory of your website: http://cuiatk.edu.pk:8000
-    
