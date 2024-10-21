@@ -1,9 +1,32 @@
 const router = require("express").Router();
+const bcrypt = require("bcrypt")
 const http = require("http");
+const jwt = require("jsonwebtoken")
 const url = require("url");
 const Organization = require("../models/organization");
+const Admin = require("../models/admin")
+const createSuperAdmin = require("../utils/createSuperAdmin")
 
-router.get("/review", async (req, res) => {
+createSuperAdmin()
+router.post("/create-admin", isSuperAdmin, async (req, res) => {
+  const { username, email, password } = req.body
+  const foundAdmin = await Admin.findOne({ email })
+  if (foundAdmin) return res.status(500).json({ msg: "User already exists!" })
+  bcrypt.genSalt(10, (err, salt) => {
+    if (err) return res.status(500).json({ msg: "Server Error!" })
+    bcrypt.hash(password, salt, async (err, hash) => {
+      if (err) return res.status(500).json({ msg: "Server Error!" })
+      await Admin.create({
+        username,
+        email,
+        password: hash,
+      })
+    })
+    res.status(200).json({ msg: "Admin Created Successfully!" })
+  })
+})
+
+router.get("/review",isAdmin, async (req, res) => {
   const unverifiedOrganizations = await Organization.find({
     organizationVerified: false,
     emailVerified: true,
@@ -11,7 +34,7 @@ router.get("/review", async (req, res) => {
   res.status(200).json(unverifiedOrganizations);
 });
 
-router.get("/verify/:id", async (req, res) => {
+router.get("/verify/:id",isAdmin, async (req, res) => {
   const foundOrganization = await Organization.findOne({
     _id: req.params.id,
   });
@@ -21,7 +44,7 @@ router.get("/verify/:id", async (req, res) => {
   try {
     const webDomain = url.parse(webUrl);
     console.log(webDomain);
-  http
+    http
       .get(webUrl, (resFromServer) => {
         if (resFromServer.statusCode === 200) {
           let data = "";
@@ -54,16 +77,70 @@ router.get("/verify/:id", async (req, res) => {
   }
 });
 
-router.post("approve/:id", async (req, res) => {
+router.post("/approve/:id",isAdmin, async (req, res) => {
   const foundOrganization = await Organization.findById(req.params.id);
-  foundOrganization.verified = true;
+  foundOrganization.organizationVerified = true;
   await foundOrganization.save();
-  res.redirect("/admin/review");
+  res.redirect("/api/admin/review");
 });
 
-router.post("reject/:id", async (req, res) => {
+router.post("/reject/:id",isAdmin, async (req, res) => {
   await Organization.findByIdAndDelete(req.params.id);
-  res.redirect("/admin/review");
+  res.redirect("/api/admin/review");
 });
 
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body
+  const foundUser = await Admin.findOne({ email })
+  if (!foundUser) return res.status(400).json({ msg: "User not found!" })
+  bcrypt.compare(password, foundUser.password, (err, same) => {
+    if (err) return res.status(500).json({ msg: 'Server Error!' })
+    if (!same) return res.status(400).json({ msg: 'Invalid credentials' });
+    const token = jwt.sign({
+      admin_id: foundUser._id,
+      email: foundUser.email,
+      role: foundUser.role
+    }, process.env.JWT_SECRET_KEY, { expiresIn: "1h" })
+    res.cookie("token", token)
+    res.status(200).json({ msg: `Successfully logged in as ${foundUser.role}` })
+  })
+})
+
+router.get("/logout",isAdmin,(req,res)=>{
+  res.cookie("token","")
+  res.status(200).json({msg:"Logout"})
+})
+
+function isSuperAdmin(req, res, next) {
+  try {
+    const token = req.cookies.token
+    if (token === "") {
+      return res.status(400).json({ msg: "No token, authorization denied" })
+    }
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY)
+    if (decodedToken.role !== "super-admin") return res.status(403).json({ msg: "Access denied. Super Admins only." })
+    req.user = decodedToken
+    next()
+  }
+  catch (error) {
+    res.status(401).json({ msg: error.message });
+  }
+}
+function isAdmin(req, res, next) {
+  console.log("Hello from Admin");
+  
+  try {
+    const token = req.cookies.token
+    if (token === "") {
+      return res.status(400).json({ msg: "No token, authorization denied" })
+    }
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY)
+    if (decodedToken.role !== "admin" && decodedToken.role !== "super-admin") return res.status(403).json({ msg: "Access denied. Admins only." })
+    req.user = decodedToken
+    next()
+  }
+  catch (error) {
+    res.status(401).json({ msg: error.message });
+  }
+}
 module.exports = router;
