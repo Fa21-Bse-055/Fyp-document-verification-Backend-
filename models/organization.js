@@ -11,6 +11,7 @@ const organizationSchema = mongoose.Schema({
   organizationVerificationCode: { type: String },
   fileContent: { type: String },
   CNICImage: { type: String, required: true }, // from user
+  role: { type: String, default: "organizaiton" }
 });
 
 module.exports = mongoose.model("organization", organizationSchema);

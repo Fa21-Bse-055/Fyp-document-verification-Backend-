@@ -12,9 +12,9 @@ const sendEmail = require("../services/sendEmail");
 const generateVerificationFile = require("../services/generateVerificationFile");
 const upload = require("../config/multerconfig")
 
-router.post("/register",upload.single("CNICImage"), async (req, res) => {
+router.post("/register", upload.single("CNICImage"), async (req, res) => {
   console.log("req.file : ", req.file);
-  const { organization_name, email, password, organization_web_url} = req.body;
+  const { organization_name, email, password, organization_web_url } = req.body;
   try {
     const foundOrganization = await Organization.findOne({
       email: email.toLowerCase(),
@@ -29,27 +29,27 @@ router.post("/register",upload.single("CNICImage"), async (req, res) => {
       });
     }
     const emailVerificationCode = genrateUniqueCode();
-console.log("emailVerificationCode : ",emailVerificationCode);
-    sendEmail(emailVerificationCode,email);
+    console.log("emailVerificationCode : ", emailVerificationCode);
+    sendEmail(emailVerificationCode, email);
 
     bcrypt.genSalt(10, (err, salt) => {
       bcrypt.hash(password, salt, async (err, hash) => {
-      try{
-        await Organization.create({
-          organization_name,
-          email: email.toLowerCase(),
-          password: hash,
-          organization_web_url,
-          emailVerificationCode,
-          CNICImage : req.file.filename
-        });
-        res.status(200).json({
-          msg: "Verify your email to get registered on our platform!",
-        });
-      }catch(err){
-        console.log(err.message);
-    res.status(400).json({ msg: err.message });
-      }
+        try {
+          await Organization.create({
+            organization_name,
+            email: email.toLowerCase(),
+            password: hash,
+            organization_web_url,
+            emailVerificationCode,
+            CNICImage: req.file.filename
+          });
+          res.status(200).json({
+            msg: "Verify your email to get registered on our platform!",
+          });
+        } catch (err) {
+          console.log(err.message);
+          res.status(400).json({ msg: err.message });
+        }
       });
     });
     console.log("Hello------Programmer");
@@ -60,13 +60,13 @@ console.log("emailVerificationCode : ",emailVerificationCode);
 });
 router.get("/verify", async (req, res) => {
   const emailVerificationCode = req.query.code;
-  console.log("verificarionCode:",emailVerificationCode );
+  console.log("verificarionCode:", emailVerificationCode);
   const foundOrganization = await Organization.findOne({
     emailVerificationCode,
   });
   console.log("foundOrganization:", foundOrganization);
   try {
-    if (!foundOrganization) 
+    if (!foundOrganization)
       return res.status(500).json({ msg: "Invalid or expired token!" });
 
     foundOrganization.emailVerified = true;
@@ -80,7 +80,7 @@ router.get("/verify", async (req, res) => {
       },
       process.env.JWT_SECRET_KEY
     );
-    res.cookie("token", token,{httpOnly:true});
+    res.cookie("token", token, { httpOnly: true });
     // console.log("token : ",token);
     res.status(200).json({ msg: "Email verified!" });
   } catch (err) {
@@ -88,13 +88,7 @@ router.get("/verify", async (req, res) => {
     res.status(500).json({ msg: "Server Error!" });
   }
 });
-// router.get("/download",(req,res)=>{
-//   const token = req.cookies.token
-//   console.log(req.cookies);
-//   const data = jwt.verify(token,process.env.JWT_SECRET_KEY)
-//   res.status(200).json({data})
-// })
-router.get("/download",cookieReader,  async (req, res) => {
+router.get("/download", cookieReader, async (req, res) => {
 
   console.log(req.organization);
 
@@ -102,12 +96,12 @@ router.get("/download",cookieReader,  async (req, res) => {
 
   console.log("foundOrganizationbyId:", foundOrganization);
   try {
-  return res.download(
+    return res.download(
       `./verificationFiles/verification_code_${foundOrganization.organizationVerificationCode}.txt`,
       (err) => {
         if (err) {
           console.log("Error sending file:", err);
-        res
+          res
             .status(500)
             .json({ msg: "An error occurred while downloading the file." });
         }
@@ -115,19 +109,38 @@ router.get("/download",cookieReader,  async (req, res) => {
     );
   } catch (err) {
     console.log("Error occured:", err.message);
-   return res.status(500).json({ msg: "Server Error!" });
+    return res.status(500).json({ msg: "Server Error!" });
   }
 });
 
-function cookieReader(req,res,next){
-  
-  const token = req.cookies.token
-  console.log("token",token);
-  
-  if(token==="")
-  res.status(500).json({msg:"TOKEN EXPIRED!"})
-  const data = jwt.verify(token, process.env.JWT_SECRET_KEY)
-        req.organization = data
-        next()
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body
+  const foundUser = await Organization.findOne({ email })
+  if (!user) return res.status(400).json({ msg: "User not found!" })
+  bcrypt.compare(password, foundUser.password, (err, same) => {
+    if (err) return res.status(500).json({ msg: 'Server Error!' })
+    if (!same) return res.status(400).json({ msg: 'Invalid credentials' });
+    const token = jwt.sign({
+      organization_id: foundUser._id,
+      email: foundUser.email,
+      role: foundUser.role
+    }, process.env.JWT_SECRET_KEY, { expiresIn: "1h" })
+    res.cookie("token", token)
+    res.status(200).json({ msg: "Organization found!" })
+  })
+})
+function cookieReader(req, res, next) {
+  try {
+    const token = req.cookies.token
+    console.log("token", token);
+
+    if (token === "")
+      res.status(500).json({ msg: "TOKEN EXPIRED!" })
+    const data = jwt.verify(token, process.env.JWT_SECRET_KEY)
+    req.organization = data
+    next()
+  } catch (error) {
+    res.status(401).json({ msg: error.message })
+  }
 }
 module.exports = router;
