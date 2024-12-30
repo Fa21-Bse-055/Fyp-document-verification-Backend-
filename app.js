@@ -9,17 +9,19 @@ const fileErrorHandler = require("./middleware/fileErrorHandler");
 const cookieParser = require("cookie-parser");
 
 connectDB();
-app.use(cookieParser())
-app.use(cors({
-  origin:'http://localhost:3001',
-  credentials:true,
-}));
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: "http://localhost:3001",
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
-app.use(fileErrorHandler)
+app.use(fileErrorHandler);
 
 app.listen(process.env.PORT, () => {
   console.log(`Server is running on Port: ${process.env.PORT}`);
