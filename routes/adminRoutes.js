@@ -7,7 +7,6 @@ const Organization = require("../models/organization");
 const Admin = require("../models/admin");
 const createSuperAdmin = require("../utils/createSuperAdmin");
 
-createSuperAdmin();
 router.post("/create-admin", isSuperAdmin, async (req, res) => {
   const { username, email, password } = req.body;
   const foundAdmin = await Admin.findOne({ email });

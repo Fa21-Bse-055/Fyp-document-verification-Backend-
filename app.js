@@ -7,6 +7,7 @@ const app = express();
 const cors = require("cors");
 const fileErrorHandler = require("./middleware/fileErrorHandler");
 const cookieParser = require("cookie-parser");
+const createSuperAdmin = require("./utils/createSuperAdmin");
 
 connectDB();
 app.use(cookieParser());
@@ -18,7 +19,6 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use(fileErrorHandler);
