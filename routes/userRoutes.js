@@ -10,9 +10,10 @@ const genrateUniqueCode = require("../utils/generateUniqueCode");
 const domainComparison = require("../services/domainComparison");
 const sendEmail = require("../services/sendEmail");
 const generateVerificationFile = require("../services/generateVerificationFile");
-const upload = require("../config/multerconfig")
+const upload = require("../config/multerconfig");
 
 router.post("/register", upload.single("CNICImage"), async (req, res) => {
+  console.log("req.body : ", req.body);
   console.log("req.file : ", req.file);
   const { organization_name, email, password, organization_web_url } = req.body;
   try {
@@ -41,7 +42,7 @@ router.post("/register", upload.single("CNICImage"), async (req, res) => {
             password: hash,
             organization_web_url,
             emailVerificationCode,
-            CNICImage: req.file.filename
+            CNICImage: req.file.filename,
           });
           res.status(200).json({
             msg: "Verify your email to get registered on our platform!",
@@ -89,10 +90,11 @@ router.get("/verify", async (req, res) => {
   }
 });
 router.get("/download", cookieReader, async (req, res) => {
-
   console.log(req.organization);
 
-  const foundOrganization = await Organization.findById(req.organization.organization_id);
+  const foundOrganization = await Organization.findById(
+    req.organization.organization_id
+  );
 
   console.log("foundOrganizationbyId:", foundOrganization);
   try {
@@ -114,33 +116,36 @@ router.get("/download", cookieReader, async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body
-  const foundUser = await Organization.findOne({ email })
-  if (!user) return res.status(400).json({ msg: "User not found!" })
+  const { email, password } = req.body;
+  const foundUser = await Organization.findOne({ email });
+  if (!user) return res.status(400).json({ msg: "User not found!" });
   bcrypt.compare(password, foundUser.password, (err, same) => {
-    if (err) return res.status(500).json({ msg: 'Server Error!' })
-    if (!same) return res.status(400).json({ msg: 'Invalid credentials' });
-    const token = jwt.sign({
-      organization_id: foundUser._id,
-      email: foundUser.email,
-      role: foundUser.role
-    }, process.env.JWT_SECRET_KEY, { expiresIn: "1h" })
-    res.cookie("token", token)
-    res.status(200).json({ msg: "Organization found!" })
-  })
-})
+    if (err) return res.status(500).json({ msg: "Server Error!" });
+    if (!same) return res.status(400).json({ msg: "Invalid credentials" });
+    const token = jwt.sign(
+      {
+        organization_id: foundUser._id,
+        email: foundUser.email,
+        role: foundUser.role,
+      },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: "1h" }
+    );
+    res.cookie("token", token);
+    res.status(200).json({ msg: "Organization found!" });
+  });
+});
 function cookieReader(req, res, next) {
   try {
-    const token = req.cookies.token
+    const token = req.cookies.token;
     console.log("token", token);
 
-    if (token === "")
-      res.status(500).json({ msg: "TOKEN EXPIRED!" })
-    const data = jwt.verify(token, process.env.JWT_SECRET_KEY)
-    req.organization = data
-    next()
+    if (token === "") res.status(500).json({ msg: "TOKEN EXPIRED!" });
+    const data = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    req.organization = data;
+    next();
   } catch (error) {
-    res.status(401).json({ msg: error.message })
+    res.status(401).json({ msg: error.message });
   }
 }
 module.exports = router;

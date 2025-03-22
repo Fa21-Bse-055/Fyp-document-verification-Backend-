@@ -1,6 +1,7 @@
 require("dotenv").config();
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const studentRoutes = require("./routes/studentRoutes");
 const express = require("express");
 const connectDB = require("./config/dbconfig");
 const app = express();
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/students", studentRoutes);
 app.use(fileErrorHandler);
 
 app.listen(process.env.PORT, () => {
