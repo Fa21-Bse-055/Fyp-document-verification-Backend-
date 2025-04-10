@@ -11,8 +11,10 @@ function sendEmail(emailVerificationCode, email) {
   
   return new Promise((resolve, reject) => {
     // Create email content
+    console.log("process.env.EMAIL_USERNAME : ",process.env.EMAIL_USERNAME);
+    
     const emailToSend = {
-      from: `"Document Verification System" <${process.env.EMAIL_USERNAME}>`,
+      from: process.env.EMAIL_USERNAME,
       to: email,
       subject: "Email Verification - Document Verification System",
       html: `<html>
@@ -24,7 +26,7 @@ function sendEmail(emailVerificationCode, email) {
             Please verify your email by clicking the button below:
           </p>
           <div style="text-align: center; margin: 20px 0;">
-            <a href="http://localhost:3001/verify?code=${emailVerificationCode}" 
+            <a href="http://localhost:3002/verify?code=${emailVerificationCode}" 
               style="background-color: #4ecdc4; color: white; padding: 12px 20px; text-decoration: none; font-size: large; border-radius: 5px;">
               Verify Email
             </a>
