@@ -36,6 +36,22 @@ router.get("/review", isAdmin, async (req, res) => {
   res.status(200).json(unverifiedOrganizations);
 });
 
+router.get("/organizations", isAdmin, async (req, res) => {
+  const { status } = req.query;
+
+  let query = {};
+
+  if (status === "pending") {
+    query = { organizationVerified: false, emailVerified: true };
+  } else if (status === "verified") {
+    query = { organizationVerified: true };
+  }
+
+  const organizations = await Organization.find(query);
+  res.status(200).json(organizations);
+});
+
+
 router.get("/verify/:id", isAdmin, async (req, res) => {
   try {
     const foundOrganization = await Organization.findOne({
@@ -159,6 +175,7 @@ router.post("/login", async (req, res) => {
     return res.status(500).json({ msg: "Server Error!" });
   }
 });
+
 
 router.get("/logout", isAdmin, (req, res) => {
   res.cookie("token", "");

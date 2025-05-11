@@ -9,8 +9,8 @@ const connectDB = async () => {
     const mongoUri = "mongodb+srv://Ahmar:Ahmar123@cluster-102.45rhq.mongodb.net/doc-verification?retryWrites=true&w=majority&appName=Cluster-102";
     await mongoose.connect(mongoUri);
     console.log("MongoDB Connected...");
-    await TemporaryOrganizationData.deleteMany({});
-    console.log("TemporaryOrganizationData cleared on startup");
+    // await TemporaryOrganizationData.deleteMany({});
+    // console.log("TemporaryOrganizationData cleared on startup");
     await TemporaryAdminData.deleteMany({ email: "ahmaranwar24@gmail.com" });
     console.log("TemporaryAdminData cleared on startup");
     createSuperAdmin();

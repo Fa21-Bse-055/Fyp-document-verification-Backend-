@@ -8,11 +8,11 @@ const transporter = require("../config/mailerconfig");
  */
 function sendEmail(emailVerificationCode, email) {
   console.log("Sending verification email to:", email);
-  
+
   return new Promise((resolve, reject) => {
     // Create email content
-    console.log("process.env.EMAIL_USERNAME : ",process.env.EMAIL_USERNAME);
-    
+    console.log("process.env.EMAIL_USERNAME : ", process.env.EMAIL_USERNAME);
+
     const emailToSend = {
       from: process.env.EMAIL_USERNAME,
       to: email,
@@ -26,7 +26,7 @@ function sendEmail(emailVerificationCode, email) {
             Please verify your email by clicking the button below:
           </p>
           <div style="text-align: center; margin: 20px 0;">
-            <a href="http://localhost:3002/verify?code=${emailVerificationCode}" 
+            <a href="http://localhost:3001/verify?code=${emailVerificationCode}" 
               style="background-color: #4ecdc4; color: white; padding: 12px 20px; text-decoration: none; font-size: large; border-radius: 5px;">
               Verify Email
             </a>
@@ -49,35 +49,40 @@ function sendEmail(emailVerificationCode, email) {
 
     // Log the verification details for debugging/testing
     console.log("Verification code:", emailVerificationCode);
-    console.log("Verification URL: http://localhost:3001/verify?code=" + emailVerificationCode);
-    
+    console.log(
+      "Verification URL: http://localhost:3001/verify?code=" +
+        emailVerificationCode
+    );
+
     try {
       // Send the email
       transporter.sendMail(emailToSend, (err, info) => {
         if (err) {
           console.error("Error sending email:", err);
           // Still resolve with a message so the application continues
-          resolve({ 
-            success: false, 
-            message: "Email could not be sent, but verification code was generated",
-            verificationCode: emailVerificationCode
+          resolve({
+            success: false,
+            message:
+              "Email could not be sent, but verification code was generated",
+            verificationCode: emailVerificationCode,
           });
         } else {
           console.log("Email sent successfully:", info.response);
           resolve({
             success: true,
             message: "Email sent successfully",
-            info: info
+            info: info,
           });
         }
       });
     } catch (error) {
       console.error("Exception while sending email:", error);
       // Still resolve with a message so the application continues
-      resolve({ 
-        success: false, 
-        message: "Email service unavailable, but verification code was generated",
-        verificationCode: emailVerificationCode
+      resolve({
+        success: false,
+        message:
+          "Email service unavailable, but verification code was generated",
+        verificationCode: emailVerificationCode,
       });
     }
   });
