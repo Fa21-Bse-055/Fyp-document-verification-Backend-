@@ -1,6 +1,7 @@
 node_modules/
+.env
 verificationFiles/*
 !verificationFiles/.gitkeep
 public/images/uploads/uploadCNIC/*
 !public/images/uploads/uploadCNIC/.gitkeep 
-.env
+
