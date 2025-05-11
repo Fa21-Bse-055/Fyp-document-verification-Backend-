@@ -3,3 +3,4 @@ verificationFiles/*
 !verificationFiles/.gitkeep
 public/images/uploads/uploadCNIC/*
 !public/images/uploads/uploadCNIC/.gitkeep 
+.env
